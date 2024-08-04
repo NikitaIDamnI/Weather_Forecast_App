@@ -1,0 +1,3 @@
+package com.example.weatherforecastapp.presentation.preview
+
+class DefaultPreviewComponent : PreviewComponent
