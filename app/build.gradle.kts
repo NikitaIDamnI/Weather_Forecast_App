@@ -20,6 +20,12 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val key = property("apikey")?.toString() ?: error(
+            "You should add apikey " +
+                    "into gradle.properties file with name apikey! "
+        )
+        buildConfigField("String", "WEATHER_API_KEY", "\"$key\"")
     }
 
     buildTypes {
@@ -40,6 +46,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.10"
@@ -83,12 +90,6 @@ dependencies {
     implementation(libs.material.icons)
     //okhttp
     implementation(libs.okhttp.logging)
-
-
-
-
-
-
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
