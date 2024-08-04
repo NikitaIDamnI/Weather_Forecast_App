@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.parselize)
 }
 
 android {
@@ -40,7 +42,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.10"
     }
     packaging {
         resources {
@@ -59,6 +61,35 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    //mvikotlin
+    implementation(libs.mvikotlin.core)
+    implementation(libs.mvikotlin.main)
+    implementation(libs.mvikotlin.coroutines)
+    //decompose
+    implementation(libs.decompose.core)
+    implementation(libs.decompose.jetpack)
+    //room
+    implementation(libs.room.core)
+    ksp(libs.room.compiler)
+    //dagger
+    implementation(libs.dagger.core)
+    ksp(libs.dagger.compiler)
+    //glide
+    implementation(libs.glide.compose)
+    //retrofit2
+    implementation(libs.retrofit2.core)
+    implementation(libs.retrofit2.converter)
+    //materialIcons
+    implementation(libs.material.icons)
+    //okhttp
+    implementation(libs.okhttp.logging)
+
+
+
+
+
+
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
