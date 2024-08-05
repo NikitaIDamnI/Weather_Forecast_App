@@ -16,7 +16,7 @@ import com.example.weatherforecastapp.presentation.details.DetailsStore.State
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-internal interface DetailsStore : Store<Intent, State, Label> {
+interface DetailsStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
         data object ClickBack : Intent
@@ -44,7 +44,7 @@ internal interface DetailsStore : Store<Intent, State, Label> {
     }
 }
 
-internal class DetailsStoreFactory @Inject constructor(
+class DetailsStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val getForecastWeatherUseCase: GetForecastWeatherUseCase,
     private val observeFavoriteStateUseCase: ObserveFavoriteStateUseCase,
@@ -140,18 +140,21 @@ internal class DetailsStoreFactory @Inject constructor(
     }
 
     private object ReducerImpl : Reducer<State, Msg> {
-        override fun State.reduce(msg: Msg): State = when(msg){
+        override fun State.reduce(msg: Msg): State = when (msg) {
             is Msg.FavoriteStateChanged -> {
-                copy( isFavorite = msg.isFavorite)
+                copy(isFavorite = msg.isFavorite)
             }
+
             Msg.ForecastIsLoading -> {
-                copy( forecastState = State.ForecastState.Loading)
+                copy(forecastState = State.ForecastState.Loading)
             }
+
             is Msg.ForecastLoaded -> {
-                copy( forecastState = State.ForecastState.Loaded(forecast = msg.forecast))
+                copy(forecastState = State.ForecastState.Loaded(forecast = msg.forecast))
             }
+
             Msg.ForecastLoadingError -> {
-                copy( forecastState = State.ForecastState.Error)
+                copy(forecastState = State.ForecastState.Error)
 
             }
         }

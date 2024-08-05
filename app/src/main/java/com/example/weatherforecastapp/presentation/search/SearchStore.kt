@@ -22,7 +22,7 @@ interface SearchStore : Store<Intent, State, Label> {
         data class SearchQueryChanged(val query: String) : Intent
         data object ClickSearch : Intent
         data object ClickBack : Intent
-        data class ClickCity(val city: SearchCity) : Intent
+        data class ClickCity(val searchCity: SearchCity) : Intent
     }
 
     data class State(
@@ -113,9 +113,9 @@ class SearchStoreFactory @Inject constructor(
                             scope.launch {
                                 changeFavoriteStateUseCase.addFavorite(
                                     City(
-                                        id = intent.city.id,
-                                        name = intent.city.name,
-                                        country = intent.city.country,
+                                        id = intent.searchCity.id,
+                                        name = intent.searchCity.name,
+                                        country = intent.searchCity.country,
                                     )
                                 )
                                 publish(Label.SavedToFavorite)
@@ -123,7 +123,7 @@ class SearchStoreFactory @Inject constructor(
                         }
 
                         OpenReason.RegularSearch -> {
-                            publish(Label.OpenForecast(intent.city))
+                            publish(Label.OpenForecast(intent.searchCity))
                         }
                     }
                 }
