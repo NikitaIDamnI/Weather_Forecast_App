@@ -1,5 +1,9 @@
 package com.example.weatherforecastapp.domane.entity
 
+import com.arkivanov.essenty.parcelable.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class City(
     val id: Int,
     val name: String,
@@ -9,5 +13,4 @@ data class City(
     val tempMaxMin: String = "",
     val conditionText: String = "",
     val conditionIconUrl: String = ""
-
-)
+) : Parcelable

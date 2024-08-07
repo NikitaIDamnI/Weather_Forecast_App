@@ -7,23 +7,27 @@ import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.example.weatherforecastapp.domane.entity.SearchCity
 import com.example.weatherforecastapp.presentation.extensions.componentScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class DefaultSearchComponent @Inject constructor(
-    componentContext: ComponentContext,
+class DefaultSearchComponent @AssistedInject constructor(
     private val storeFactory: SearchStoreFactory,
-    private val openReason: OpenReason,
-    private val onBackClick: () -> Unit,
-    private val onSavedToFavorite: () -> Unit,
-    private val onForecastForCityRequested: (SearchCity) -> Unit
+    @Assisted("componentContext") componentContext: ComponentContext,
+    @Assisted("openReason") private val openReason: OpenReason,
+    @Assisted("onBackClick") private val onBackClick: () -> Unit,
+    @Assisted("onSavedToFavorite") private val onSavedToFavorite: () -> Unit,
+    @Assisted("onForecastForCityRequested") private val onForecastForCityRequested: (SearchCity) -> Unit
 ) : SearchComponent, ComponentContext by componentContext {
 
 
     private val store = instanceKeeper.getStore { storeFactory.create(openReason) }
     private val scope = componentContext.componentScope()
+
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<SearchStore.State> = store.stateFlow
@@ -57,5 +61,16 @@ class DefaultSearchComponent @Inject constructor(
         store.accept(SearchStore.Intent.ClickBack)
     }
 
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("componentContext") componentContext: ComponentContext,
+            @Assisted("openReason") openReason: OpenReason,
+            @Assisted("onBackClick") onBackClick: () -> Unit,
+            @Assisted("onSavedToFavorite") onSavedToFavorite: () -> Unit,
+            @Assisted("onForecastForCityRequested") onForecastForCityRequested: (SearchCity) -> Unit
+        ): DefaultSearchComponent
+    }
 
 }
