@@ -17,6 +17,9 @@ interface FavoriteCitiesDao {
     @Query("SELECT EXISTS(SELECT 1 FROM favorite_cities WHERE id = :cityId LIMIT 1)")
     fun observeIsFavorite(cityId: Int): Flow<Boolean>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM favorite_cities WHERE id = :cityId LIMIT 1)")
+    suspend fun checkFavorite(cityId: Int): Boolean
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addToFavorite(city: CityDbModel)
 

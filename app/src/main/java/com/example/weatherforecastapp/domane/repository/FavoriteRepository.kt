@@ -13,4 +13,6 @@ interface FavoriteRepository {
 
     suspend fun removeFavorite(cityId: Int)
 
+    suspend fun checkFromUpdate(city: City): Boolean
+
 }

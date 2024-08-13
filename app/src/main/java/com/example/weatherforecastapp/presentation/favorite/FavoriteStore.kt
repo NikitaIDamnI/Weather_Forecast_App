@@ -1,16 +1,22 @@
 package com.example.weatherforecastapp.presentation.favorite
 
+import androidx.annotation.RequiresExtension
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import com.example.weatherforecastapp.data.mapper.addWeather
 import com.example.weatherforecastapp.domane.entity.City
+import com.example.weatherforecastapp.domane.usecase.ChangeFavoriteStateUseCase
+import com.example.weatherforecastapp.domane.usecase.CheckFromUpdateUseCase
 import com.example.weatherforecastapp.domane.usecase.GetCurrentWeatherUseCase
 import com.example.weatherforecastapp.domane.usecase.GetFavoriteCitiesUseCase
 import com.example.weatherforecastapp.presentation.favorite.FavoriteStore.Intent
 import com.example.weatherforecastapp.presentation.favorite.FavoriteStore.Label
 import com.example.weatherforecastapp.presentation.favorite.FavoriteStore.State
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,7 +24,9 @@ interface FavoriteStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
         data class CityItemClicked(val city: City) : Intent
+
         data object ClickSearch : Intent
+
         data object ClickAddToFavorite : Intent
     }
 
@@ -35,7 +43,7 @@ interface FavoriteStore : Store<Intent, State, Label> {
             data object Loading : WeatherState()
             data object Error : WeatherState()
             data class Loaded(
-                val tempC: Float,
+                val tempC: String,
                 val iconUrl: String
             ) : WeatherState()
         }
@@ -52,7 +60,10 @@ interface FavoriteStore : Store<Intent, State, Label> {
 class FavoriteStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val getFavoriteCitiesUseCase: GetFavoriteCitiesUseCase,
-    private val getCurrentWeatherUseCase: GetCurrentWeatherUseCase
+    private val getCurrentWeatherUseCase: GetCurrentWeatherUseCase,
+    private val changeFavoriteStateUseCase: ChangeFavoriteStateUseCase,
+    private val checkFromUpdateUseCase: CheckFromUpdateUseCase
+
 ) {
 
     fun create(): FavoriteStore =
@@ -73,7 +84,7 @@ class FavoriteStoreFactory @Inject constructor(
         data class FavoriteCitiesLoaded(val cities: List<City>) : Msg
         data class WeatherLoaded(
             val cityId: Int,
-            val tempC: Float,
+            val tempC: String,
             val condition: String,
         ) : Msg
 
@@ -87,6 +98,7 @@ class FavoriteStoreFactory @Inject constructor(
             scope.launch {
                 getFavoriteCitiesUseCase().collect {
                     dispatch(Action.FavoriteCitiesLoaded(it))
+
                 }
             }
         }
@@ -115,31 +127,52 @@ class FavoriteStoreFactory @Inject constructor(
                     val cities = action.cities
                     dispatch(Msg.FavoriteCitiesLoaded(cities))
                     scope.launch {
-                        cities.forEach {
-                            loadWeather(it)
-                        }
+                        loadWeather(cities)
                     }
                 }
             }
         }
 
-        private suspend fun loadWeather(city: City) {
-            dispatch(Msg.WeatherIsLoading(city.id))
-            try {
-                val weather = getCurrentWeatherUseCase(city.id)
-                dispatch(
-                    Msg.WeatherLoaded(
-                        cityId = city.id,
-                        tempC = weather.tempC,
-                        condition = weather.conditionIconUrl
-                    )
-                )
-            } catch (e: Exception) {
-                dispatch(Msg.WeatherLoadingError(city.id))
+
+        private suspend fun loadWeather(cities: List<City>) {
+            val isUpdate = checkFromUpdateUseCase(cities.last())
+            if (isUpdate) {
+                cities.forEach { city ->
+                    scope.launch {
+                        dispatch(Msg.WeatherIsLoading(city.id))
+                        try {
+                            val weather = getCurrentWeatherUseCase(city.id)
+                            dispatch(
+                                Msg.WeatherLoaded(
+                                    cityId = city.id,
+                                    tempC = weather.tempC,
+                                    condition = weather.conditionIconUrl
+                                )
+                            )
+                            val newCity = city.addWeather(weather)
+                            changeFavoriteStateUseCase.addFavorite(newCity)
+                        } catch (e: Exception) {
+                            dispatch(Msg.WeatherLoadingError(city.id))
+                        }
+                    }
+                }
+            } else {
+                cities.forEach { city ->
+                    scope.launch {
+                        dispatch(
+                            Msg.WeatherLoaded(
+                                cityId = city.id,
+                                tempC = city.weather.tempC,
+                                condition = city.weather.conditionIconUrl
+                            )
+                        )
+                    }
+                }
+
             }
+
+
         }
-
-
     }
 
 
