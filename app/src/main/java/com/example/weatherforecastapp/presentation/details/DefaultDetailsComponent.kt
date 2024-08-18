@@ -12,17 +12,22 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 class DefaultDetailsComponent @AssistedInject constructor(
     private val storeFactory: DetailsStoreFactory,
     @Assisted("componentContext") componentContext: ComponentContext,
-    @Assisted("city") private val city: City,
+    @Assisted("city") private val cities: List<City>,
+    @Assisted("indexCity") indexCity: Int,
     @Assisted("onBackClick") private val onBackClick: () -> Unit,
 ) : DetailsComponent, ComponentContext by componentContext {
 
 
-    private val store = instanceKeeper.getStore { storeFactory.create(city) }
+    private val store = instanceKeeper.getStore {
+        storeFactory.create(
+            indexCity = indexCity,
+            city = cities
+        )
+    }
     private val scope = componentContext.componentScope()
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -46,14 +51,15 @@ class DefaultDetailsComponent @AssistedInject constructor(
     }
 
     override fun onClickFavoriteStatus() {
-        store.accept(DetailsStore.Intent.ClickChangeFavoriteStatus)
+        // store.accept(DetailsStore.Intent.ClickChangeFavoriteStatus)
     }
 
     @AssistedFactory
     interface Factory {
         fun create(
             @Assisted("componentContext") componentContext: ComponentContext,
-            @Assisted("city") city: City,
+            @Assisted("city") cities: List<City>,
+            @Assisted("indexCity") indexCity: Int,
             @Assisted("onBackClick") onBackClick: () -> Unit,
         ): DefaultDetailsComponent
     }

@@ -11,7 +11,7 @@ interface FavoriteComponent {
 
     fun onClickAddFavorite()
 
-    fun onCityItemClick(city: City)
+    fun onCityItemClick(indexCity : Int,cities: List<City>)
 
 
 

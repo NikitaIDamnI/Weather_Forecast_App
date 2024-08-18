@@ -2,7 +2,6 @@ package com.example.weatherforecastapp.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
 
 data class Gradient(
     val primaryGradient: Brush,
@@ -21,8 +20,8 @@ data class Gradient(
     )
 }
 
-object CardGradients {
-    val gradients = listOf(
+object Gradients {
+    val cardGradients = listOf(
         Gradient(
             firstColor = Color(0xFFFFF176),
             secondColor = Color(0xFFFF5621),
@@ -55,4 +54,15 @@ object CardGradients {
         ),
     )
 
+    val temperature = Brush.horizontalGradient(
+        colors = listOf(
+            Color(0xFF0D47A1), // Темно-синий (очень холодно)
+            Color(0xFF1976D2), // Голубой (прохладный)
+            Color(0xFF42A5F5), // Светло-голубой (немного прохладный)
+            Color(0xFF00E676), // Зеленый (комфортная температура)
+            Color(0xFFFFEB3B), // Желтый (тепло)
+            Color(0xFFFF5722), // Красный (очень жарко)
+            Color(0xFFE40606)  // Красный (очень жарко)
+        )
+    )
 }

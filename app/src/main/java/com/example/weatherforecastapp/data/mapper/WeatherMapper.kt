@@ -1,13 +1,22 @@
 package com.example.weatherforecastapp.data.mapper
 
+import androidx.compose.ui.graphics.Color
+import com.example.weatherforecastapp.data.network.dto.DayWeatherDto
 import com.example.weatherforecastapp.data.network.dto.WeatherCurrentDto
 import com.example.weatherforecastapp.data.network.dto.WeatherDto
 import com.example.weatherforecastapp.data.network.dto.WeatherForecastDto
 import com.example.weatherforecastapp.domane.entity.City
+import com.example.weatherforecastapp.domane.entity.ConditionValue
+import com.example.weatherforecastapp.domane.entity.DetailedForecast
 import com.example.weatherforecastapp.domane.entity.Forecast
 import com.example.weatherforecastapp.domane.entity.SearchCity
 import com.example.weatherforecastapp.domane.entity.Weather
 import com.example.weatherforecastapp.presentation.extensions.tempToFormattedString
+import com.example.weatherforecastapp.presentation.ui.theme.ProgressBarColdColor
+import com.example.weatherforecastapp.presentation.ui.theme.ProgressBarHighColor
+import com.example.weatherforecastapp.presentation.ui.theme.ProgressBarLowColor
+import com.example.weatherforecastapp.presentation.ui.theme.ProgressBarMiddleColor
+import com.example.weatherforecastapp.presentation.ui.theme.ProgressBarNullColor
 import java.util.Calendar
 import java.util.Date
 
@@ -17,8 +26,10 @@ fun WeatherDto.toWeather(): Weather = Weather(
     tempC = tempC.tempToFormattedString(),
     conditionText = condition.conditionText,
     conditionIconUrl = condition.conditionIconUrl.correctImageUrl(),
-    date = lastUpdatedEpoch.toCalendarDto() ?: Calendar.getInstance()
-)
+    date = lastUpdatedEpoch.toCalendarDto() ?: Calendar.getInstance(),
+    detailedForecast = this.toDetailedForecast(),
+
+    )
 
 fun WeatherForecastDto.toForecast(): Forecast = Forecast(
     currentWeather = currentWeather.toWeather(),
@@ -30,10 +41,69 @@ fun WeatherForecastDto.toForecast(): Forecast = Forecast(
             minTempC = dayWeatherDto.minTempC.tempToFormattedString(),
             conditionText = dayWeatherDto.conditionDto.conditionText,
             conditionIconUrl = dayWeatherDto.conditionDto.conditionIconUrl.correctImageUrl(),
-            date = dayDto.date.toCalendarDto() ?: Calendar.getInstance()
+            date = dayDto.date.toCalendarDto() ?: Calendar.getInstance(),
+            detailedForecast = dayDto.dayWeatherDto.toDetailedForecast(),
         )
     }
 )
+
+private fun DayWeatherDto.toDetailedForecast(): List<DetailedForecast> {
+    return builderListDetailedForecast(
+        windValue = 0f, precipitationValue =0f, humidityValue =0f, feelsLike = 0f
+    )
+}
+ fun WeatherDto.toDetailedForecast(): List<DetailedForecast> {
+    return builderListDetailedForecast(
+        windValue = windKmh,
+        precipitationValue = precipMM,
+        humidityValue = humidity,
+        feelsLike = feelslikeC
+    )
+}
+
+
+private fun builderListDetailedForecast(
+    windValue: Float,
+    precipitationValue: Float,
+    humidityValue: Float,
+    feelsLike: Float
+): List<DetailedForecast> {
+    return listOf(
+        DetailedForecast(
+            name = "Feels like",
+            value = feelsLike,
+            conditionValue = ConditionValue.DEGREE,
+            progressValue = 0,
+            colorCondition = getColorByValue(windValue, ConditionValue.DEGREE.value)
+        ),
+        DetailedForecast(
+            name = "Wind",
+            value = windValue,
+            conditionValue = ConditionValue.KM_H,
+            progressValue = 0,
+
+            colorCondition = getColorByValue(windValue, ConditionValue.KM_H.value)
+        ),
+        DetailedForecast(
+            name = "Precipitation",
+            value = precipitationValue,
+            conditionValue = ConditionValue.PERCENT,
+            progressValue = 0,
+
+            colorCondition = getColorByValue(precipitationValue, ConditionValue.PERCENT.value)
+        ),
+        DetailedForecast(
+            name = "Humidity",
+            value = humidityValue.toFloat(),
+            conditionValue = ConditionValue.PERCENT,
+            progressValue = 0,
+            colorCondition = getColorByValue(humidityValue, ConditionValue.PERCENT.value)
+        ),
+
+        )
+}
+
+
 
 fun Weather.formatedToCity(city: SearchCity) = City(
     id = city.id,
@@ -50,14 +120,47 @@ fun City.addWeather(weather: Weather) = City(
 )
 
 
-
- private fun Long.toCalendarDto(): Calendar? = Calendar.getInstance().apply {
+private fun Long.toCalendarDto(): Calendar? = Calendar.getInstance().apply {
     time = Date(this@toCalendarDto * 1000)
 }
+
 fun Long.toCalendar() = Calendar.getInstance().apply {
     time = Date(this@toCalendar)
 }
 
 private fun String.correctImageUrl(): String = "https:$this".replace("64x64", "128x128")
 
+private fun getColorByValue(value: Float, conditionValue: String): Color {
+    return when (conditionValue) {
+        "km/h" -> {
+            when {
+                value < 18 -> ProgressBarLowColor
+                value >= 18 && value < 25 -> ProgressBarMiddleColor
+                value >= 25 -> ProgressBarHighColor
+                else -> ProgressBarNullColor
+            }
+        }
+
+        "%" -> {
+            when {
+                value < 50 -> ProgressBarLowColor
+                value >= 50 && value < 75 -> ProgressBarMiddleColor
+                value >= 75 -> ProgressBarHighColor
+                else -> ProgressBarNullColor
+            }
+        }
+
+        "°" -> {
+            return when {
+                value < 0 -> ProgressBarColdColor
+                value >= 0 && value < 10 -> ProgressBarLowColor
+                value >= 10 && value < 25 -> ProgressBarMiddleColor
+                value >= 25 -> ProgressBarHighColor
+                else -> ProgressBarNullColor
+            }
+        }
+
+        else -> throw RuntimeException("Unknown condition value: $conditionValue")
+    }
+}
 

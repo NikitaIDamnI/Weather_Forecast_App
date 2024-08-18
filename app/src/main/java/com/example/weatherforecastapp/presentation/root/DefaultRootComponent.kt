@@ -9,7 +9,6 @@ import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.example.weatherforecastapp.domane.entity.City
-import com.example.weatherforecastapp.domane.entity.SearchCity
 import com.example.weatherforecastapp.presentation.details.DefaultDetailsComponent
 import com.example.weatherforecastapp.presentation.favorite.DefaultFavoriteComponent
 import com.example.weatherforecastapp.presentation.search.DefaultSearchComponent
@@ -45,12 +44,9 @@ class DefaultRootComponent @AssistedInject constructor(
             is Config.Details -> {
                 RootComponent.Child.Details(
                     detailsComponentFactory.create(
+                        indexCity = config.indexCity,
                         componentContext = componentContext,
-                        city = City(
-                            id = config.city.id,
-                            name = config.city.name,
-                            country = config.city.country
-                        ),
+                        cities =config.cities ,
                         onBackClick = { navigation.pop() }
                     )
                 )
@@ -60,8 +56,11 @@ class DefaultRootComponent @AssistedInject constructor(
                 RootComponent.Child.Favorite(
                     favoriteComponentFactory.create(
                         componentContext = componentContext,
-                        onCityClicked = {
-                            navigation.push(Config.Details(it))
+                        onCityClicked = {index,cities ->
+                            navigation.push(Config.Details(
+                                indexCity = index,
+                                cities = cities
+                            ))
                         },
                         onAddFavoriteClicked = {
                             navigation.push(Config.Search(OpenReason.AddToFavorite))
@@ -87,11 +86,9 @@ class DefaultRootComponent @AssistedInject constructor(
                             navigation.pop()
                         },
                         onForecastForCityRequested = {
-                            navigation.push(Config.Details(City(
-                                id = it.id,
-                                name = it.name,
-                                country = it.country
-                            )))
+//                            navigation.push(Config.Details(
+//                                indexCity =
+//                            )
                         },
                     )
                 )
@@ -108,7 +105,10 @@ class DefaultRootComponent @AssistedInject constructor(
         data class Search(val openReason: OpenReason) : Config
 
         @Parcelize
-        data class Details(val city: City) : Config
+        data class Details(
+            val indexCity: Int,
+            val cities: List<City>
+        ) : Config
     }
 
     @AssistedFactory

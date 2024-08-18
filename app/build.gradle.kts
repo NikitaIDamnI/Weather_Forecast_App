@@ -90,6 +90,9 @@ dependencies {
     implementation(libs.material.icons)
     //okhttp
     implementation(libs.okhttp.logging)
+    //fonts
+    implementation(libs.compose.fonts)
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

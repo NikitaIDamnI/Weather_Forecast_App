@@ -24,8 +24,8 @@ fun City.toDbModel(): CityDbModel = with(this.weather) {
 
 fun CityDbModel.toEntity(): City {
     val tempParts = tempMaxMin.split("-")
-    val maxTemp = tempParts.getOrNull(0)?.trim() ?: "--°C"
-    val minTemp = tempParts.getOrNull(1)?.trim() ?: "--°C"
+    val maxTemp = tempParts.getOrNull(0)?.trim() ?: "--°"
+    val minTemp = tempParts.getOrNull(1)?.trim() ?: "--°"
 
     return City(
         id = id,
@@ -37,7 +37,7 @@ fun CityDbModel.toEntity(): City {
             minTempC = minTemp,
             conditionText = conditionText,
             conditionIconUrl = conditionIconUrl,
-            date = lastUpdatedEpoch.toCalendar() ?: Calendar.getInstance()
+            date = lastUpdatedEpoch.toCalendar() ?: Calendar.getInstance(),
         )
     )
 }

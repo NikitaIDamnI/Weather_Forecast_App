@@ -13,7 +13,7 @@ fun RootContent(component: RootComponent,paddingValues: PaddingValues) {
         stack = component.stack
     ) {
         when (val instance = it.instance) {
-            is RootComponent.Child.Details -> DetailsContent(component = instance.component,paddingValues)
+            is RootComponent.Child.Details -> DetailsContent(component = instance.component)
             is RootComponent.Child.Favorite -> FavoriteContent(component = instance.component,paddingValues)
             is RootComponent.Child.Search -> SearchContent(component = instance.component,paddingValues)
         }

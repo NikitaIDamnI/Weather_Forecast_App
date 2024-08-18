@@ -17,7 +17,7 @@ import javax.inject.Inject
 class DefaultFavoriteComponent @AssistedInject constructor(
     private val storeFactory: FavoriteStoreFactory,
     @Assisted("componentContext") componentContext: ComponentContext,
-    @Assisted("onCityClicked") private val onCityClicked: (City) -> Unit,
+    @Assisted("onCityClicked") private val onCityClicked: (Int,List<City>) -> Unit,
     @Assisted("onAddFavoriteClicked") private val onAddFavoriteClicked: () -> Unit,
     @Assisted("onSearchClicked") private val onSearchClicked: () -> Unit
 ) : FavoriteComponent, ComponentContext by componentContext {
@@ -26,7 +26,6 @@ class DefaultFavoriteComponent @AssistedInject constructor(
     private val scope = componentContext.componentScope()
 
     init {
-
         scope.launch {
             store.labels.collect {
                 when (it) {
@@ -39,7 +38,10 @@ class DefaultFavoriteComponent @AssistedInject constructor(
                     }
 
                     is FavoriteStore.Label.CityItemClicked -> {
-                        onCityClicked(it.city)
+                        onCityClicked(
+                            it.indexCity,
+                            it.cities
+                        )
                     }
                 }
             }
@@ -59,15 +61,16 @@ class DefaultFavoriteComponent @AssistedInject constructor(
 
     }
 
-    override fun onCityItemClick(city: City) {
-        store.accept(FavoriteStore.Intent.CityItemClicked(city))
+    override fun onCityItemClick(indexCity: Int, cities: List<City>) {
+        store.accept(FavoriteStore.Intent.CityItemClicked(indexCity,cities))
     }
+
 
     @AssistedFactory
     interface Factory {
         fun create(
             @Assisted("componentContext") componentContext: ComponentContext,
-            @Assisted("onCityClicked") onCityClicked: (City) -> Unit,
+            @Assisted("onCityClicked") onCityClicked: (Int,List<City>) -> Unit,
             @Assisted("onAddFavoriteClicked") onAddFavoriteClicked: () -> Unit,
             @Assisted("onSearchClicked") onSearchClicked: () -> Unit
         ): DefaultFavoriteComponent

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,12 +35,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,9 +45,8 @@ import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.weatherforecastapp.R
-import com.example.weatherforecastapp.presentation.extensions.tempToFormattedString
 import com.example.weatherforecastapp.presentation.favorite.FavoriteStore.State.WeatherState.Loading
-import com.example.weatherforecastapp.presentation.ui.theme.CardGradients
+import com.example.weatherforecastapp.presentation.ui.theme.Gradients
 import com.example.weatherforecastapp.presentation.ui.theme.Gradient
 import com.example.weatherforecastapp.presentation.ui.theme.SearchColor
 
@@ -67,7 +62,7 @@ fun FavoriteContent(
     LazyVerticalGrid(
         modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues)
+            .padding(top = paddingValues.calculateTopPadding())
             .background(Color.Black),
         columns = GridCells.Fixed(2),
         contentPadding = PaddingValues(16.dp),
@@ -97,7 +92,7 @@ fun FavoriteContent(
             CityCard(
                 index = index,
                 city = item,
-                onClick = { component.onCityItemClick(item.city) }
+                onClick = { component.onCityItemClick(indexCity = index, cities = state.value.getCity()) }
             )
         }
 
@@ -248,7 +243,6 @@ private fun CityCard(
 
 
 
-
             Text(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -259,7 +253,7 @@ private fun CityCard(
                 style = TextStyle(
                     color = Color.Black,
                     drawStyle = Stroke(
-                        width = 1f, // толщина обводки
+                        width = 1f,
                         join = StrokeJoin.Round
                     )
                 )
@@ -281,6 +275,8 @@ private fun CityCard(
 }
 
 private fun getGradientByIndex(index: Int): Gradient {
-    val gradients = CardGradients.gradients
+    val gradients = Gradients.cardGradients
     return gradients[index % gradients.size]
 }
+
+

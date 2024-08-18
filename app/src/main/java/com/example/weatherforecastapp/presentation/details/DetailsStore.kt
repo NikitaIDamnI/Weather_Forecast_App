@@ -13,6 +13,8 @@ import com.example.weatherforecastapp.domane.usecase.ObserveFavoriteStateUseCase
 import com.example.weatherforecastapp.presentation.details.DetailsStore.Intent
 import com.example.weatherforecastapp.presentation.details.DetailsStore.Label
 import com.example.weatherforecastapp.presentation.details.DetailsStore.State
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,11 +22,12 @@ interface DetailsStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
         data object ClickBack : Intent
-        data object ClickChangeFavoriteStatus : Intent
+        // data object ClickChangeFavoriteStatus : Intent
     }
 
     data class State(
-        val city: City,
+        val indexCity: Int,
+        val city: List<City>,
         val isFavorite: Boolean,
         val forecastState: ForecastState
     ) {
@@ -33,7 +36,7 @@ interface DetailsStore : Store<Intent, State, Label> {
             data object Loading : ForecastState
             data object Error : ForecastState
             data class Loaded(
-                val forecast: Forecast
+                val forecast: List<Forecast>
             ) : ForecastState
         }
 
@@ -52,10 +55,11 @@ class DetailsStoreFactory @Inject constructor(
 
 ) {
 
-    fun create(city: City): DetailsStore =
+    fun create(indexCity: Int, city: List<City>): DetailsStore =
         object : DetailsStore, Store<Intent, State, Label> by storeFactory.create(
             name = "DetailsStore",
             initialState = State(
+                indexCity = indexCity,
                 city = city,
                 isFavorite = false,
                 forecastState = State.ForecastState.Initial
@@ -66,36 +70,38 @@ class DetailsStoreFactory @Inject constructor(
         ) {}
 
     private sealed interface Action {
-        data class ForecastLoaded(val forecast: Forecast) : Action
-        data class FavoriteStateChanged(val isFavorite: Boolean) : Action
+        data class ForecastLoaded(val forecast: List<Forecast>) : Action
+
+        // data class FavoriteStateChanged(val isFavorite: Boolean) : Action
         data object ForecastIsLoading : Action
         data object ForecastLoadingError : Action
     }
 
     private sealed interface Msg {
-        data class ForecastLoaded(val forecast: Forecast) : Msg
+        data class ForecastLoaded(val forecast: List<Forecast>) : Msg
         data class FavoriteStateChanged(val isFavorite: Boolean) : Msg
         data object ForecastIsLoading : Msg
         data object ForecastLoadingError : Msg
     }
 
     private inner class BootstrapperImpl(
-        private val city: City
+        private val cities: List<City>
     ) : CoroutineBootstrapper<Action>() {
         override fun invoke() {
+            dispatch(Action.ForecastIsLoading)
             scope.launch {
-                observeFavoriteStateUseCase(cityId = city.id).collect {
-                    dispatch(Action.FavoriteStateChanged(it))
-                }
-            }
-            scope.launch {
-                try {
-                    val forecast = getForecastWeatherUseCase(city.id)
-                    dispatch(Action.ForecastLoaded(forecast))
-                } catch (e: Exception) {
-                    dispatch(Action.ForecastLoadingError)
-                }
+                val forecasts = cities.map { city ->
+                    async {
+                        try {
+                            getForecastWeatherUseCase(city.id)
+                        } catch (e: Exception) {
+                            dispatch(Action.ForecastLoadingError)
+                            null // возвращаем null в случае ошибки
+                        }
+                    }
+                }.awaitAll().filterNotNull() // фильтруем успешные результаты
 
+                dispatch(Action.ForecastLoaded(forecasts))
             }
         }
     }
@@ -105,16 +111,16 @@ class DetailsStoreFactory @Inject constructor(
             when (intent) {
                 Intent.ClickBack -> publish(Label.ClickBack)
 
-                Intent.ClickChangeFavoriteStatus -> {
-                    scope.launch {
-                        val state = getState()
-                        if (state.isFavorite) {
-                            changeFavoriteStateUseCase.removeFavorite(cityId = state.city.id)
-                        } else {
-                            changeFavoriteStateUseCase.addFavorite(city = state.city)
-                        }
-                    }
-                }
+//                Intent.ClickChangeFavoriteStatus -> {
+//                    scope.launch {
+//                        val state = getState()
+//                        if (state.isFavorite) {
+//                            changeFavoriteStateUseCase.removeFavorite(cityId = state.city.id)
+//                        } else {
+//                            changeFavoriteStateUseCase.addFavorite(city = state.city)
+//                        }
+//                    }
+//                }
             }
         }
 
@@ -124,9 +130,9 @@ class DetailsStoreFactory @Inject constructor(
                     dispatch(Msg.ForecastLoaded(action.forecast))
                 }
 
-                is Action.FavoriteStateChanged -> {
-                    dispatch(Msg.FavoriteStateChanged(action.isFavorite))
-                }
+//                is Action.FavoriteStateChanged -> {
+//                    dispatch(Msg.FavoriteStateChanged(action.isFavorite))
+//                }
 
                 Action.ForecastIsLoading -> {
                     dispatch(Msg.ForecastIsLoading)

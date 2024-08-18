@@ -6,10 +6,11 @@ import java.util.Calendar
 
 @Parcelize
 data class Weather(
-    val tempC:String = "",
-    val maxTempC:String = "",
-    val minTempC:String = "",
-    val conditionText:String  = "",
-    val conditionIconUrl:String = "",
+    val tempC:String = "--",
+    val maxTempC:String = "--",
+    val minTempC:String = "--",
+    val conditionText:String  = "--",
+    val conditionIconUrl:String = "--",
     val date:Calendar = Calendar.getInstance(),
+    val detailedForecast: List<DetailedForecast> = emptyList()
 ):Parcelable
