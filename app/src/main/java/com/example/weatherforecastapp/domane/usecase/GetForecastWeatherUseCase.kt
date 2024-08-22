@@ -1,6 +1,5 @@
 package com.example.weatherforecastapp.domane.usecase
 
-import com.example.weatherforecastapp.domane.repository.FavoriteRepository
 import com.example.weatherforecastapp.domane.repository.WeatherRepository
 import javax.inject.Inject
 

@@ -1,5 +1,6 @@
 package com.example.weatherforecastapp.data.repository
 
+import android.util.Log
 import com.example.weatherforecastapp.data.mapper.toSearchCities
 import com.example.weatherforecastapp.data.network.api.ApiService
 import com.example.weatherforecastapp.domane.entity.City
@@ -12,7 +13,8 @@ class SearchRepositoryImpl  @Inject constructor(
 ): SearchRepository {
 
     override suspend fun searchCities(query: String): List<SearchCity> {
-        val response = apiService.searchCity(query)
+        Log.d("SearchRepositoryImpl", "searchCities: $query")
+        val response = apiService.searchCity(query=query)
         return response.toSearchCities()
     }
 }

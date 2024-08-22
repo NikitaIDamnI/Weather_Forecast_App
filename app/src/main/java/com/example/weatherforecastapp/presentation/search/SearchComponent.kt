@@ -1,6 +1,6 @@
 package com.example.weatherforecastapp.presentation.search
 
-import androidx.room.Query
+import com.example.weatherforecastapp.domane.entity.City
 import com.example.weatherforecastapp.domane.entity.SearchCity
 import kotlinx.coroutines.flow.StateFlow
 
@@ -15,4 +15,11 @@ interface SearchComponent {
     fun onClickCity (searchCity: SearchCity)
 
     fun onClickBack ()
+
+    fun onClickClosePreview()
+
+    fun onClickAddFavorite(city: City)
+
+
+
 }
