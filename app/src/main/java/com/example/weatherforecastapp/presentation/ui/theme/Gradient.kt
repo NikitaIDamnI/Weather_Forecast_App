@@ -38,7 +38,7 @@ object Gradients {
             firstColor = Color(0xFFAED581),
             secondColor = Color(0xFF25FFFF),
             thirdColor = Color(0xFF66BB6A),
-            fourthColor = Color(0x00029A14),
+            fourthColor = Color(0xDC048813),
         ),
         Gradient(
             firstColor = Color(0xFF379FFF),

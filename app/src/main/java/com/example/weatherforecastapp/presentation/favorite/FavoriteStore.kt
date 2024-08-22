@@ -27,7 +27,8 @@ interface FavoriteStore : Store<Intent, State, Label> {
 
         data object ClickSearch : Intent
 
-        data object ClickAddToFavorite : Intent
+        data class DeleteCity(val cityId: Int) : Intent
+
     }
 
     data class State(
@@ -57,7 +58,6 @@ interface FavoriteStore : Store<Intent, State, Label> {
         ) : Label
 
         data object ClickSearch : Label
-        data object ClickToFavorite : Label
     }
 }
 
@@ -96,6 +96,7 @@ class FavoriteStoreFactory @Inject constructor(
         data class WeatherLoadingError(val cityId: Int) : Msg
         data class WeatherIsLoading(val cityId: Int) : Msg
 
+
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
@@ -125,8 +126,10 @@ class FavoriteStoreFactory @Inject constructor(
                     publish(Label.ClickSearch)
                 }
 
-                Intent.ClickAddToFavorite -> {
-                    publish(Label.ClickToFavorite)
+                is Intent.DeleteCity -> {
+                    scope.launch {
+                        changeFavoriteStateUseCase.removeFavorite(intent.cityId)
+                    }
                 }
             }
         }
@@ -139,7 +142,7 @@ class FavoriteStoreFactory @Inject constructor(
                     scope.launch {
                         if (!update) {
                             loadWeatherNetwork(cities)
-                        }else{
+                        } else {
                             loadFromLocal(cities)
                         }
                     }
@@ -256,14 +259,3 @@ class FavoriteStoreFactory @Inject constructor(
 }
 
 
-fun FavoriteStore.State.getCity(): List<City> {
-    return this.cityItems.map {
-        City(
-            id = it.city.id,
-            name = it.city.name,
-            country = it.city.country,
-            weather = it.city.weather
-        )
-    }
-
-}

@@ -7,12 +7,13 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.example.weatherforecastapp.domane.entity.City
 import com.example.weatherforecastapp.presentation.details.DefaultDetailsComponent
+import com.example.weatherforecastapp.presentation.extensions.componentScope
 import com.example.weatherforecastapp.presentation.favorite.DefaultFavoriteComponent
 import com.example.weatherforecastapp.presentation.search.DefaultSearchComponent
-import com.example.weatherforecastapp.presentation.search.OpenReason
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -32,7 +33,8 @@ class DefaultRootComponent @AssistedInject constructor(
         source = navigation,
         initialConfiguration = Config.Favorite,
         handleBackButton = true,
-        childFactory = ::child
+        childFactory = ::child,
+
     )
 
 
@@ -62,11 +64,8 @@ class DefaultRootComponent @AssistedInject constructor(
                                 cities = cities
                             ))
                         },
-                        onAddFavoriteClicked = {
-                            navigation.push(Config.Search(OpenReason.AddToFavorite))
-                        },
                         onSearchClicked = {
-                            navigation.push(Config.Search(OpenReason.RegularSearch))
+                            navigation.push(Config.Search)
                         }
                     )
                 )
@@ -78,18 +77,12 @@ class DefaultRootComponent @AssistedInject constructor(
                 RootComponent.Child.Search(
                     searchComponentFactory.create(
                         componentContext = componentContext,
-                        openReason = config.openReason,
                         onBackClick = {
                             navigation.pop()
                         },
-                        onSavedToFavorite = {
-                            navigation.pop()
-                        },
-                        onForecastForCityRequested = {
-//                            navigation.push(Config.Details(
-//                                indexCity =
-//                            )
-                        },
+                       onClickAddFavorite = {
+                           navigation.pop()
+                       }
                     )
                 )
 
@@ -102,7 +95,7 @@ class DefaultRootComponent @AssistedInject constructor(
         data object Favorite : Config
 
         @Parcelize
-        data class Search(val openReason: OpenReason) : Config
+        data object Search : Config
 
         @Parcelize
         data class Details(

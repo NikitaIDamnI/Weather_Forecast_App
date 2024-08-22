@@ -1,6 +1,11 @@
 package com.example.weatherforecastapp.presentation.details
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideIn
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -27,26 +32,32 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -54,6 +65,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.example.weatherforecastapp.domane.entity.City
 import com.example.weatherforecastapp.domane.entity.ConditionValue
 import com.example.weatherforecastapp.domane.entity.DetailedForecast
+import com.example.weatherforecastapp.domane.entity.Forecast
 import com.example.weatherforecastapp.domane.entity.Weather
 import com.example.weatherforecastapp.presentation.extensions.formatDate
 import com.example.weatherforecastapp.presentation.ui.theme.Gradients
@@ -76,11 +88,22 @@ fun DetailsContent(
         pageCount = { state.value.city.size }
     )
 
+    val stateAnimation = remember {
+        MutableTransitionState(false).apply {
+            targetState = true
+        }
+    }
+
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Transparent),
-
+        topBar = {
+            TopBar(
+                onBackClick = { component.onClickBack() }
+            )
+        },
         bottomBar = {
             ToolBarBottom(
                 modifier = Modifier
@@ -101,7 +124,8 @@ fun DetailsContent(
                 page = page,
                 paddingValues = paddingValues,
                 city = state.value.city[page],
-                forecast = state.value.forecastState,
+                forecastState = state.value.forecastState,
+                stateAnimation = stateAnimation
             )
         }
 
@@ -109,13 +133,34 @@ fun DetailsContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopBar(
+    onBackClick: () -> Unit
+) {
+    CenterAlignedTopAppBar(
+        title = {},
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent,
+            titleContentColor = MaterialTheme.colorScheme.background
+        ),
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(imageVector = Icons.Default.ArrowBackIosNew, contentDescription = null)
+            }
+        }
+    )
+
+}
+
 
 @Composable
-private fun ContentCityForecast(
+fun ContentCityForecast(
     city: City,
-    forecast: DetailsStore.State.ForecastState,
+    forecastState: DetailsStore.State.ForecastState,
     paddingValues: PaddingValues,
     page: Int,
+    stateAnimation: MutableTransitionState<Boolean>,
 ) {
     Log.d(TAG, "ContentCityForecast: ")
 
@@ -125,32 +170,34 @@ private fun ContentCityForecast(
             .background(Gradients.cardGradients[page].primaryGradient)
     ) {
         Column {
-            Spacer(
-                modifier = Modifier
-                    .padding(top = paddingValues.calculateTopPadding())
-                    .padding(40.dp)
-            )
             CityInfo(
                 modifier = Modifier
+                    .padding(paddingValues)
                     .padding(10.dp),
                 name = city.name,
                 data = city.weather.date
             )
-            Spacer(modifier = Modifier.padding(10.dp))
             WeatherInfo(
                 modifier = Modifier
-                    .padding(10.dp),
+                    .padding(top = 5.dp, start = 10.dp, end = 10.dp),
                 currentWeather = city.weather,
-                forecast = forecast,
-                page = page
+                forecastState = forecastState,
+                page = page,
+                stateAnimation = stateAnimation
             )
-            Spacer(modifier = Modifier.padding(15.dp))
-            if (forecast is DetailsStore.State.ForecastState.Loaded) {
-                ListForecastNextDay(
+            if (forecastState is DetailsStore.State.ForecastState.Loaded) {
+                AnimationListForecastNextDay(
                     modifier = Modifier
-                        .align(Alignment.CenterHorizontally),
-                    list = forecast.forecast[page].upcoming,
-                    paddingValues = paddingValues
+                        .align(Alignment.CenterHorizontally)
+                        .fillMaxWidth()
+                        .padding(
+                            start = 10.dp,
+                            end = 10.dp,
+                            top = 30.dp,
+                            bottom = paddingValues.calculateBottomPadding()
+                        ),
+                    weatherList = forecastState.forecast[page].upcoming,
+                    state = stateAnimation
                 )
             }
 
@@ -162,38 +209,44 @@ private fun ContentCityForecast(
 fun WeatherInfo(
     modifier: Modifier = Modifier,
     currentWeather: Weather,
-    forecast: DetailsStore.State.ForecastState,
-    page: Int,
-
-    ) {
+    forecastState: DetailsStore.State.ForecastState = DetailsStore.State.ForecastState.Initial,
+    forecast: Forecast? = null,
+    page: Int = 0,
+    stateAnimation: MutableTransitionState<Boolean>?= null,
+) {
     Log.d(TAG, "WeatherInfo: ")
-
     Box(modifier = modifier) {
-
         Row(
             modifier = modifier
                 .height(400.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
-
         ) {
             TempInfo(
                 modifier = Modifier
                     .padding(10.dp)
-                    .wrapContentWidth()
-                ,
+                    .wrapContentWidth(),
                 tempC = currentWeather.tempC,
                 conditionText = currentWeather.conditionText,
                 conditionIconUrl = currentWeather.conditionIconUrl
             )
             Spacer(modifier = Modifier.weight(1f))
-            if (forecast is DetailsStore.State.ForecastState.Loaded) {
+            if (forecast == null) {
+                if (forecastState is DetailsStore.State.ForecastState.Loaded) {
+                    AnimationDetailedWeatherToList(
+                        modifier = Modifier
+                            .padding(start = 30.dp)
+                            .width(150.dp),
+                        detailsForecast = forecastState.forecast[page].currentWeather.detailedForecast,
+                        state = stateAnimation?: MutableTransitionState(false)
+                    )
+
+                }
+            }else{
                 DetailedWeatherToList(
-                    modifier = Modifier
-                        .padding(start = 30.dp)
-                        .width(150.dp),
-                    detailsForecast = forecast.forecast[page].currentWeather.detailedForecast
+                    modifier = modifier,
+                    detailsForecast = forecast.currentWeather.detailedForecast
                 )
             }
 
@@ -211,7 +264,10 @@ fun TempInfo(
 ) {
     Log.d(TAG, "TempInfo: ")
 
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier
+            .width(200.dp)
+    ) {
         Text(
             text = tempC,
             fontSize = 90.sp,
@@ -227,12 +283,11 @@ fun TempInfo(
             )
             Text(
                 modifier = Modifier
-                    .width(100.dp),
+                    .wrapContentSize(),
                 text = conditionText,
                 color = Color.White,
                 fontFamily = JuraLight,
                 fontSize = 23.sp,
-                maxLines = 2
             )
         }
     }
@@ -320,7 +375,7 @@ private fun ToolBarBottom(
 
 
 @Composable
-private fun CityInfo(
+fun CityInfo(
     modifier: Modifier = Modifier,
     name: String,
     data: Calendar
@@ -339,17 +394,12 @@ private fun CityInfo(
             Text(
                 text = formatDate,
                 fontSize = 20.sp,
-                fontFamily = JuraMedium,
+                fontFamily = JuraLight,
                 color = Color.White
             )
         }
     }
 }
-
-
-
-
-
 
 
 @Composable
@@ -440,7 +490,7 @@ fun DetailedForecastItem(
 
             }
             Spacer(modifier = Modifier.padding(5.dp))
-            if (detailedForecast.conditionValue == ConditionValue.DEGREE){
+            if (detailedForecast.conditionValue == ConditionValue.DEGREE) {
                 TemperatureProgressBar(
                     modifier = Modifier
                         .width(100.dp)
@@ -448,15 +498,13 @@ fun DetailedForecastItem(
                     value = detailedForecast.value.toInt()
                 )
 
-            }else {
-
+            } else {
                 LinearProgressIndicator(
                     modifier = Modifier
                         .width(100.dp)
                         .height(4.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                    ,
-                    progress = { detailedForecast.value },
+                        .clip(RoundedCornerShape(8.dp)),
+                    progress = { detailedForecast.progressValue },
                     color = detailedForecast.colorCondition,
                 )
             }
@@ -470,24 +518,68 @@ fun DetailedForecastItem(
 fun ListForecastNextDay(
     modifier: Modifier = Modifier,
     list: List<Weather>,
-    paddingValues: PaddingValues
 ) {
     Log.d(TAG, "ListForecastNextDay: ")
-
-    Card(
-        modifier = modifier
-            .wrapContentSize()
-            .padding(bottom = paddingValues.calculateBottomPadding()),
-        colors = CardDefaults.cardColors(Color.White.copy(0.1f)),
-    ) {
-        LazyRow(
+    Box(modifier = modifier) {
+        Card(
             modifier = Modifier
-        ) {
-            items(list) {
-                ForecastNextDayItem(it)
-            }
+                .wrapContentSize()
+                .align(Alignment.Center),
 
+            colors = CardDefaults.cardColors(Color.White.copy(0.1f)),
+
+            ) {
+            LazyRow(
+                modifier = Modifier
+            ) {
+                items(list) {
+                    ForecastNextDayItem(it)
+                }
+
+            }
         }
+    }
+}
+
+@Composable
+fun AnimationListForecastNextDay(
+    modifier: Modifier = Modifier,
+    weatherList: List<Weather>,
+    state: MutableTransitionState<Boolean>
+
+) {
+
+    AnimatedVisibility(
+        visibleState = state,
+        enter = fadeIn(animationSpec = tween(500)) + slideIn(
+            animationSpec = tween(500),
+            initialOffset = { IntOffset(0, it.height) }),
+    ) {
+        ListForecastNextDay(
+            modifier = modifier,
+            list = weatherList
+        )
+    }
+
+}
+
+@Composable
+fun AnimationDetailedWeatherToList(
+    modifier: Modifier = Modifier,
+    detailsForecast: List<DetailedForecast>,
+    state: MutableTransitionState<Boolean>
+) {
+
+    AnimatedVisibility(
+        visibleState = state,
+        enter = fadeIn(animationSpec = tween(500)) + slideIn(
+            animationSpec = tween(500),
+            initialOffset = { IntOffset(it.height, it.height) }),
+    ) {
+        DetailedWeatherToList(
+            modifier = modifier,
+            detailsForecast = detailsForecast
+        )
     }
 }
 
@@ -555,28 +647,24 @@ fun TemperatureProgressBar(modifier: Modifier, value: Int) {
             .drawBehind {
                 val width = size.width
                 val height = size.height
-
                 val lineWidth = 2.dp.toPx()
-                val lineHeight = height
-
                 val minTemp = -50
                 val maxTemp = 50
                 val temperatureRange = maxTemp - minTemp
-
                 val normalizedValue = (value - minTemp).toFloat() / temperatureRange
                 val linePosition = width * normalizedValue
-
                 drawLine(
                     color = Color.Black,
-                    start = Offset(linePosition, -lineHeight / 2), // Вырезаем за верхнюю границу
-                    end = Offset(linePosition, height + lineHeight / 2), // Вырезаем за нижнюю границу
+                    start = Offset(linePosition, -height / 2), // Вырезаем за верхнюю границу
+                    end = Offset(
+                        linePosition,
+                        height + height / 2
+                    ),
                     strokeWidth = lineWidth
                 )
             }
     )
 }
-
-
 
 
 const val TAG = "DetailsContent"

@@ -22,7 +22,6 @@ interface DetailsStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
         data object ClickBack : Intent
-        // data object ClickChangeFavoriteStatus : Intent
     }
 
     data class State(
@@ -39,7 +38,6 @@ interface DetailsStore : Store<Intent, State, Label> {
                 val forecast: List<Forecast>
             ) : ForecastState
         }
-
     }
 
     sealed interface Label {
@@ -50,9 +48,6 @@ interface DetailsStore : Store<Intent, State, Label> {
 class DetailsStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val getForecastWeatherUseCase: GetForecastWeatherUseCase,
-    private val observeFavoriteStateUseCase: ObserveFavoriteStateUseCase,
-    private val changeFavoriteStateUseCase: ChangeFavoriteStateUseCase
-
 ) {
 
     fun create(indexCity: Int, city: List<City>): DetailsStore =
@@ -71,8 +66,6 @@ class DetailsStoreFactory @Inject constructor(
 
     private sealed interface Action {
         data class ForecastLoaded(val forecast: List<Forecast>) : Action
-
-        // data class FavoriteStateChanged(val isFavorite: Boolean) : Action
         data object ForecastIsLoading : Action
         data object ForecastLoadingError : Action
     }
@@ -89,6 +82,7 @@ class DetailsStoreFactory @Inject constructor(
     ) : CoroutineBootstrapper<Action>() {
         override fun invoke() {
             dispatch(Action.ForecastIsLoading)
+
             scope.launch {
                 val forecasts = cities.map { city ->
                     async {
@@ -96,11 +90,10 @@ class DetailsStoreFactory @Inject constructor(
                             getForecastWeatherUseCase(city.id)
                         } catch (e: Exception) {
                             dispatch(Action.ForecastLoadingError)
-                            null // возвращаем null в случае ошибки
+                            null
                         }
                     }
-                }.awaitAll().filterNotNull() // фильтруем успешные результаты
-
+                }.awaitAll().filterNotNull()
                 dispatch(Action.ForecastLoaded(forecasts))
             }
         }
@@ -110,17 +103,6 @@ class DetailsStoreFactory @Inject constructor(
         override fun executeIntent(intent: Intent, getState: () -> State) {
             when (intent) {
                 Intent.ClickBack -> publish(Label.ClickBack)
-
-//                Intent.ClickChangeFavoriteStatus -> {
-//                    scope.launch {
-//                        val state = getState()
-//                        if (state.isFavorite) {
-//                            changeFavoriteStateUseCase.removeFavorite(cityId = state.city.id)
-//                        } else {
-//                            changeFavoriteStateUseCase.addFavorite(city = state.city)
-//                        }
-//                    }
-//                }
             }
         }
 
@@ -129,15 +111,9 @@ class DetailsStoreFactory @Inject constructor(
                 is Action.ForecastLoaded -> {
                     dispatch(Msg.ForecastLoaded(action.forecast))
                 }
-
-//                is Action.FavoriteStateChanged -> {
-//                    dispatch(Msg.FavoriteStateChanged(action.isFavorite))
-//                }
-
                 Action.ForecastIsLoading -> {
                     dispatch(Msg.ForecastIsLoading)
                 }
-
                 Action.ForecastLoadingError -> {
                     dispatch(Msg.ForecastLoadingError)
                 }
@@ -150,21 +126,15 @@ class DetailsStoreFactory @Inject constructor(
             is Msg.FavoriteStateChanged -> {
                 copy(isFavorite = msg.isFavorite)
             }
-
             Msg.ForecastIsLoading -> {
                 copy(forecastState = State.ForecastState.Loading)
             }
-
             is Msg.ForecastLoaded -> {
                 copy(forecastState = State.ForecastState.Loaded(forecast = msg.forecast))
             }
-
             Msg.ForecastLoadingError -> {
                 copy(forecastState = State.ForecastState.Error)
-
             }
         }
-
-
     }
 }

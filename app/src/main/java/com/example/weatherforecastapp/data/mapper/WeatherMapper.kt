@@ -73,14 +73,14 @@ private fun builderListDetailedForecast(
             name = "Feels like",
             value = feelsLike,
             conditionValue = ConditionValue.DEGREE,
-            progressValue = 0,
+            progressValue = 1f,
             colorCondition = getColorByValue(windValue, ConditionValue.DEGREE.value)
         ),
         DetailedForecast(
             name = "Wind",
             value = windValue,
             conditionValue = ConditionValue.KM_H,
-            progressValue = 0,
+            progressValue = 1f,
 
             colorCondition = getColorByValue(windValue, ConditionValue.KM_H.value)
         ),
@@ -88,15 +88,15 @@ private fun builderListDetailedForecast(
             name = "Precipitation",
             value = precipitationValue,
             conditionValue = ConditionValue.PERCENT,
-            progressValue = 0,
+            progressValue = precipitationValue / 100,
 
             colorCondition = getColorByValue(precipitationValue, ConditionValue.PERCENT.value)
         ),
         DetailedForecast(
             name = "Humidity",
-            value = humidityValue.toFloat(),
+            value = humidityValue,
             conditionValue = ConditionValue.PERCENT,
-            progressValue = 0,
+            progressValue = humidityValue / 100,
             colorCondition = getColorByValue(humidityValue, ConditionValue.PERCENT.value)
         ),
 
@@ -134,8 +134,8 @@ private fun getColorByValue(value: Float, conditionValue: String): Color {
     return when (conditionValue) {
         "km/h" -> {
             when {
-                value < 18 -> ProgressBarLowColor
-                value >= 18 && value < 25 -> ProgressBarMiddleColor
+                value < 15 -> ProgressBarLowColor
+                value >= 15 && value < 25 -> ProgressBarMiddleColor
                 value >= 25 -> ProgressBarHighColor
                 else -> ProgressBarNullColor
             }

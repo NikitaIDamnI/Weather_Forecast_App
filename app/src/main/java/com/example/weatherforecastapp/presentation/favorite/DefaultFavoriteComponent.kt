@@ -12,13 +12,11 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 class DefaultFavoriteComponent @AssistedInject constructor(
     private val storeFactory: FavoriteStoreFactory,
     @Assisted("componentContext") componentContext: ComponentContext,
     @Assisted("onCityClicked") private val onCityClicked: (Int,List<City>) -> Unit,
-    @Assisted("onAddFavoriteClicked") private val onAddFavoriteClicked: () -> Unit,
     @Assisted("onSearchClicked") private val onSearchClicked: () -> Unit
 ) : FavoriteComponent, ComponentContext by componentContext {
 
@@ -33,9 +31,7 @@ class DefaultFavoriteComponent @AssistedInject constructor(
                         onSearchClicked()
                     }
 
-                    FavoriteStore.Label.ClickToFavorite -> {
-                        onAddFavoriteClicked()
-                    }
+
 
                     is FavoriteStore.Label.CityItemClicked -> {
                         onCityClicked(
@@ -56,13 +52,14 @@ class DefaultFavoriteComponent @AssistedInject constructor(
         store.accept(FavoriteStore.Intent.ClickSearch)
     }
 
-    override fun onClickAddFavorite() {
-        store.accept(FavoriteStore.Intent.ClickAddToFavorite)
 
-    }
 
     override fun onCityItemClick(indexCity: Int, cities: List<City>) {
         store.accept(FavoriteStore.Intent.CityItemClicked(indexCity,cities))
+    }
+
+    override fun onDeleteCity(cityId: Int) {
+        store.accept(FavoriteStore.Intent.DeleteCity(cityId))
     }
 
 
@@ -71,9 +68,9 @@ class DefaultFavoriteComponent @AssistedInject constructor(
         fun create(
             @Assisted("componentContext") componentContext: ComponentContext,
             @Assisted("onCityClicked") onCityClicked: (Int,List<City>) -> Unit,
-            @Assisted("onAddFavoriteClicked") onAddFavoriteClicked: () -> Unit,
-            @Assisted("onSearchClicked") onSearchClicked: () -> Unit
-        ): DefaultFavoriteComponent
+            @Assisted("onSearchClicked") onSearchClicked: () -> Unit,
+
+            ): DefaultFavoriteComponent
     }
 
 

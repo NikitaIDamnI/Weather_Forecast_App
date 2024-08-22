@@ -9,9 +9,9 @@ interface FavoriteComponent {
 
     fun onClickSearch()
 
-    fun onClickAddFavorite()
-
     fun onCityItemClick(indexCity : Int,cities: List<City>)
+
+    fun onDeleteCity(cityId: Int)
 
 
 

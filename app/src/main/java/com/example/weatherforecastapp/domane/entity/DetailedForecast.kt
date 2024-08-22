@@ -11,17 +11,18 @@ data class DetailedForecast (
     val value : Float,
     val conditionValue : ConditionValue,
     val colorConditionInt: Int,
-    val progressValue: Int
+    val progressValue: Float
 ): Parcelable{
     val colorCondition: Color
         get() = Color(colorConditionInt)
+
 
     constructor(
          name : String,
          value : Float,
          conditionValue : ConditionValue,
          colorCondition: Color,
-         progressValue: Int
+         progressValue: Float
     ) : this(name, value, conditionValue, colorCondition.toArgb(),progressValue)
 
 

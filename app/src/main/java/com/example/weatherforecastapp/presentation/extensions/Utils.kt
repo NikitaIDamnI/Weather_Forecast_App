@@ -21,8 +21,7 @@ fun ComponentContext.componentScope() = CoroutineScope(
 
 fun Float.tempToFormattedString(): String = "${roundToInt()}°"
 
-fun Float.formatTempMaxMin(minTemp: Float): String =
-    "${this.tempToFormattedString()} - ${minTemp.tempToFormattedString()}"
+
 
 fun Calendar.formatDate(
     format: String = "EEEE, d MMM yyyy",

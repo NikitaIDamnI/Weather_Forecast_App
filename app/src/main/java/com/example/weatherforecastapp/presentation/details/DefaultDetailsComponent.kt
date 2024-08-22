@@ -51,7 +51,6 @@ class DefaultDetailsComponent @AssistedInject constructor(
     }
 
     override fun onClickFavoriteStatus() {
-        // store.accept(DetailsStore.Intent.ClickChangeFavoriteStatus)
     }
 
     @AssistedFactory

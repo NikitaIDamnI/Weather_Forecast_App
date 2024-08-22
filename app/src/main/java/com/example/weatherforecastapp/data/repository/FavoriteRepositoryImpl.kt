@@ -41,8 +41,12 @@ class FavoriteRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun checkFavorite(cityId: Int): Boolean {
+        return favoriteCitiesDao.checkFavorite(cityId)
+    }
+
     private fun checkTime(city: City): Boolean {
-        val lastTimeUpdate = city.weather.date .apply {
+        val lastTimeUpdate = city.weather.date.apply {
             add(Calendar.MINUTE, 30)
         }
         Log.d("Repositor_Log", "lastTimeUpdate: ${lastTimeUpdate.time}")

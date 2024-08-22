@@ -17,4 +17,5 @@ val ProgressBarMiddleColor = Color(0xFFFFEE58)
 val ProgressBarHighColor = Color(0xFFEF5350)
 val ProgressBarColdColor = Color(0xFF29B6F6)
 val ProgressBarNullColor = Color(0xFF767777)
+val ColorDeleteCard = Color(0xFFE74946)
 
