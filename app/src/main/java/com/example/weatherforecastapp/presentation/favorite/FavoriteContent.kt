@@ -98,15 +98,14 @@ fun FavoriteContent(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = paddingValues.calculateTopPadding())
             .background(Color.Black),
-
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item {
             Row(
                 modifier = Modifier
+                    .padding(top = paddingValues.calculateTopPadding())
                     .fillMaxWidth()
             ) {
                 Text(

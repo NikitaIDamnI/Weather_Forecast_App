@@ -152,6 +152,7 @@ class FavoriteStoreFactory @Inject constructor(
 
 
         private suspend fun loadWeatherNetwork(cities: List<City>) {
+            if (cities.isEmpty()) return
             if (checkFromUpdateUseCase(cities[0])) {
                 cities.forEach { city ->
                     scope.launch {
